@@ -1,5 +1,4 @@
 using Atya.Diagnostics.Logging.Context;
-using Atya.Diagnostics.Logging.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Logging.UnitTests.DependencyInjection;

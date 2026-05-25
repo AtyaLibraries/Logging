@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Atya.Diagnostics.Logging.Context;
-using Atya.Diagnostics.Logging.DependencyInjection;
 using Atya.Diagnostics.Logging.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
