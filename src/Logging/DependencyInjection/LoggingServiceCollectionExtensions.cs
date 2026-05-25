@@ -4,7 +4,7 @@
 using Atya.Diagnostics.Logging.Context;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Atya.Diagnostics.Logging.DependencyInjection;
+namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// Provides dependency injection helpers for <c>Atya.Diagnostics.Logging</c>.
