@@ -20,7 +20,7 @@ public sealed class LogScopeState : IReadOnlyList<KeyValuePair<string, object?>>
     /// <param name="properties">The structured scope properties.</param>
     public LogScopeState(IEnumerable<KeyValuePair<string, object?>> properties)
     {
-        this._properties = CreateNormalizedProperties(Guard.AgainstNull(properties));
+        _properties = CreateNormalizedProperties(Guard.AgainstNull(properties));
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public sealed class LogScopeState : IReadOnlyList<KeyValuePair<string, object?>>
     /// <param name="properties">The structured scope properties.</param>
     public LogScopeState(IEnumerable<LogContextProperty> properties)
     {
-        this._properties = CreateNormalizedProperties(Guard.AgainstNull(properties).Select(static property => property.ToKeyValuePair()));
+        _properties = CreateNormalizedProperties(Guard.AgainstNull(properties).Select(static property => property.ToKeyValuePair()));
     }
 
     /// <summary>
@@ -40,33 +40,33 @@ public sealed class LogScopeState : IReadOnlyList<KeyValuePair<string, object?>>
     /// <summary>
     /// Gets the number of properties contained in this scope state.
     /// </summary>
-    public int Count => this._properties.Length;
+    public int Count => _properties.Length;
 
     /// <summary>
     /// Gets the property at the specified index.
     /// </summary>
     /// <param name="index">The zero-based index.</param>
     /// <returns>The property at the specified index.</returns>
-    public KeyValuePair<string, object?> this[int index] => this._properties[index];
+    public KeyValuePair<string, object?> this[int index] => _properties[index];
 
     /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, object?>> GetEnumerator()
     {
-        return ((IEnumerable<KeyValuePair<string, object?>>)this._properties).GetEnumerator();
+        return ((IEnumerable<KeyValuePair<string, object?>>)_properties).GetEnumerator();
     }
 
     /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return this._properties.GetEnumerator();
+        return _properties.GetEnumerator();
     }
 
     /// <inheritdoc />
     public override string ToString()
     {
-        return this._properties.Length == 0
+        return _properties.Length == 0
             ? string.Empty
-            : string.Join(", ", this._properties.Select(static x => string.Concat(x.Key, "=", x.Value)));
+            : string.Join(", ", _properties.Select(static x => string.Concat(x.Key, "=", x.Value)));
     }
 
     private static KeyValuePair<string, object?>[] CreateNormalizedProperties(IEnumerable<KeyValuePair<string, object?>> properties)

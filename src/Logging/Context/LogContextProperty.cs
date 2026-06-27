@@ -16,8 +16,8 @@ public readonly record struct LogContextProperty
     /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null, empty, or whitespace.</exception>
     public LogContextProperty(string name, object? value)
     {
-        this.Name = Guard.AgainstNullOrWhiteSpace(name);
-        this.Value = value;
+        Name = Guard.AgainstNullOrWhiteSpace(name);
+        Value = value;
     }
 
     /// <summary>
@@ -42,6 +42,6 @@ public readonly record struct LogContextProperty
     /// <returns>A key/value representation of the property.</returns>
     public KeyValuePair<string, object?> ToKeyValuePair()
     {
-        return new KeyValuePair<string, object?>(this.Name, this.Value);
+        return new KeyValuePair<string, object?>(Name, Value);
     }
 }
