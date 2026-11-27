@@ -10,6 +10,11 @@ namespace Atya.Diagnostics.Logging.Extensions;
 /// </summary>
 public static class LoggerExtensions
 {
+    private const string UnknownOperation = "UnknownOperation";
+    private const string UnknownDependency = "UnknownDependency";
+    private const string UnknownResource = "UnknownResource";
+    private const string UnknownReason = "Unspecified";
+
     private static readonly Action<ILogger, string, object?, Exception?> s_operationStartedMessage =
         LoggerMessage.Define<string, object?>(
             LogLevel.Information,
@@ -66,10 +71,12 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the operation.</param>
     public static void LogOperationStarted(this ILogger logger, string operationName, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        operationName = Guard.AgainstNullOrWhiteSpace(operationName);
+        if (logger is null || !logger.IsEnabled(LogLevel.Information))
+        {
+            return;
+        }
 
-        s_operationStartedMessage(logger, operationName, target, null);
+        s_operationStartedMessage(logger, NameOrDefault(operationName, UnknownOperation), target, null);
     }
 
     /// <summary>
@@ -80,10 +87,12 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the operation.</param>
     public static void LogOperationCompleted(this ILogger logger, string operationName, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        operationName = Guard.AgainstNullOrWhiteSpace(operationName);
+        if (logger is null || !logger.IsEnabled(LogLevel.Information))
+        {
+            return;
+        }
 
-        s_operationCompletedMessage(logger, operationName, target, null);
+        s_operationCompletedMessage(logger, NameOrDefault(operationName, UnknownOperation), target, null);
     }
 
     /// <summary>
@@ -95,11 +104,12 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the operation.</param>
     public static void LogOperationFailed(this ILogger logger, Exception exception, string operationName, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        exception = Guard.AgainstNull(exception);
-        operationName = Guard.AgainstNullOrWhiteSpace(operationName);
+        if (logger is null || !logger.IsEnabled(LogLevel.Error))
+        {
+            return;
+        }
 
-        s_operationFailedMessage(logger, operationName, target, exception);
+        s_operationFailedMessage(logger, NameOrDefault(operationName, UnknownOperation), target, exception);
     }
 
     /// <summary>
@@ -110,10 +120,12 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the validation.</param>
     public static void LogValidationFailed(this ILogger logger, string reason, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        reason = Guard.AgainstNullOrWhiteSpace(reason);
+        if (logger is null || !logger.IsEnabled(LogLevel.Warning))
+        {
+            return;
+        }
 
-        s_validationFailedMessage(logger, target, reason, null);
+        s_validationFailedMessage(logger, target, NameOrDefault(reason, UnknownReason), null);
     }
 
     /// <summary>
@@ -125,11 +137,12 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the exception.</param>
     public static void LogUnhandledException(this ILogger logger, Exception exception, string? operationName = null, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        exception = Guard.AgainstNull(exception);
+        if (logger is null || !logger.IsEnabled(LogLevel.Error))
+        {
+            return;
+        }
 
-        string resolvedOperationName = string.IsNullOrWhiteSpace(operationName) ? "UnknownOperation" : operationName;
-        s_unhandledExceptionMessage(logger, resolvedOperationName, target, exception);
+        s_unhandledExceptionMessage(logger, NameOrDefault(operationName, UnknownOperation), target, exception);
     }
 
     /// <summary>
@@ -141,17 +154,12 @@ public static class LoggerExtensions
     /// <param name="maxAttempts">The total number of allowed attempts.</param>
     public static void LogRetryAttempt(this ILogger logger, string operationName, int attemptNumber, int maxAttempts)
     {
-        logger = Guard.AgainstNull(logger);
-        operationName = Guard.AgainstNullOrWhiteSpace(operationName);
-        attemptNumber = Guard.AgainstZeroOrNegative(attemptNumber);
-        maxAttempts = Guard.AgainstZeroOrNegative(maxAttempts);
-
-        if (attemptNumber > maxAttempts)
+        if (logger is null || !logger.IsEnabled(LogLevel.Warning))
         {
-            throw new ArgumentOutOfRangeException(nameof(attemptNumber), "Attempt number cannot be greater than max attempts.");
+            return;
         }
 
-        s_retryAttemptMessage(logger, attemptNumber, maxAttempts, operationName, null);
+        s_retryAttemptMessage(logger, attemptNumber, maxAttempts, NameOrDefault(operationName, UnknownOperation), null);
     }
 
     /// <summary>
@@ -163,11 +171,12 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the dependency call.</param>
     public static void LogDependencyFailure(this ILogger logger, Exception exception, string dependencyName, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        exception = Guard.AgainstNull(exception);
-        dependencyName = Guard.AgainstNullOrWhiteSpace(dependencyName);
+        if (logger is null || !logger.IsEnabled(LogLevel.Error))
+        {
+            return;
+        }
 
-        s_dependencyFailureMessage(logger, dependencyName, target, exception);
+        s_dependencyFailureMessage(logger, NameOrDefault(dependencyName, UnknownDependency), target, exception);
     }
 
     /// <summary>
@@ -178,9 +187,14 @@ public static class LoggerExtensions
     /// <param name="target">The optional target associated with the resource lookup.</param>
     public static void LogResourceNotFound(this ILogger logger, string resourceType, object? target = null)
     {
-        logger = Guard.AgainstNull(logger);
-        resourceType = Guard.AgainstNullOrWhiteSpace(resourceType);
+        if (logger is null || !logger.IsEnabled(LogLevel.Information))
+        {
+            return;
+        }
 
-        s_resourceNotFoundMessage(logger, resourceType, target, null);
+        s_resourceNotFoundMessage(logger, NameOrDefault(resourceType, UnknownResource), target, null);
     }
+
+    private static string NameOrDefault(string? value, string fallback) =>
+        string.IsNullOrWhiteSpace(value) ? fallback : value;
 }

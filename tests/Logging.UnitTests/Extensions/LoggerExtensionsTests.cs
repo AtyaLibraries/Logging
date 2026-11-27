@@ -152,98 +152,82 @@ public sealed class LoggerExtensionsTests
     }
 
     [Fact]
-    public void LogOperationStarted_Should_Throw_When_Logger_Is_Null()
+    public void Helpers_Should_Not_Throw_When_Logger_Is_Null()
     {
         ILogger logger = null!;
+        var exception = new InvalidOperationException("boom");
 
-        Action action = () => logger.LogOperationStarted("ProcessOrder");
+        Action[] actions =
+        [
+            () => logger.LogOperationStarted("Op"),
+            () => logger.LogOperationCompleted("Op"),
+            () => logger.LogOperationFailed(exception, "Op"),
+            () => logger.LogValidationFailed("reason"),
+            () => logger.LogUnhandledException(exception),
+            () => logger.LogRetryAttempt("Op", 1, 3),
+            () => logger.LogDependencyFailure(exception, "Dep"),
+            () => logger.LogResourceNotFound("Order"),
+        ];
 
-        _ = action.Should().Throw<ArgumentNullException>().Where(exception => exception.ParamName == "logger");
+        foreach (Action action in actions)
+        {
+            _ = action.Should().NotThrow();
+        }
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void LogOperationStarted_Should_Throw_When_OperationName_Is_Invalid(string? operationName)
+    public void Helpers_Should_Not_Throw_And_Should_Substitute_Placeholder_For_Blank_Names(string? name)
     {
         var logger = new TestLogger();
+        var exception = new InvalidOperationException("boom");
 
-        Action action = () => logger.LogOperationStarted(operationName!);
+        Action action = () =>
+        {
+            logger.LogOperationStarted(name!);
+            logger.LogOperationCompleted(name!);
+            logger.LogOperationFailed(exception, name!);
+            logger.LogValidationFailed(name!);
+            logger.LogRetryAttempt(name!, 1, 3);
+            logger.LogDependencyFailure(exception, name!);
+            logger.LogResourceNotFound(name!);
+        };
 
-        _ = action.Should().Throw<ArgumentException>().Where(exception => exception.ParamName == "operationName");
+        _ = action.Should().NotThrow();
+        _ = logger.Entries.Should().HaveCount(7);
+        _ = logger.Entries.Should().OnlyContain(entry => !string.IsNullOrWhiteSpace(entry.Message));
     }
 
     [Fact]
-    public void LogOperationFailed_Should_Throw_When_Exception_Is_Null()
+    public void Helpers_Should_Not_Throw_When_Exception_Is_Null()
     {
         var logger = new TestLogger();
 
-        Action action = () => logger.LogOperationFailed(null!, "ProcessOrder");
+        Action action = () =>
+        {
+            logger.LogOperationFailed(null!, "Op");
+            logger.LogUnhandledException(null!);
+            logger.LogDependencyFailure(null!, "Dep");
+        };
 
-        _ = action.Should().Throw<ArgumentNullException>().Where(exception => exception.ParamName == "exception");
-    }
-
-    [Fact]
-    public void LogValidationFailed_Should_Throw_When_Reason_Is_Invalid()
-    {
-        var logger = new TestLogger();
-
-        Action action = () => logger.LogValidationFailed(" ");
-
-        _ = action.Should().Throw<ArgumentException>().Where(exception => exception.ParamName == "reason");
-    }
-
-    [Fact]
-    public void LogUnhandledException_Should_Throw_When_Exception_Is_Null()
-    {
-        var logger = new TestLogger();
-
-        Action action = () => logger.LogUnhandledException(null!);
-
-        _ = action.Should().Throw<ArgumentNullException>().Where(exception => exception.ParamName == "exception");
+        _ = action.Should().NotThrow();
+        _ = logger.Entries.Should().HaveCount(3);
     }
 
     [Theory]
-    [InlineData(0, 3, "attemptNumber")]
-    [InlineData(1, 0, "maxAttempts")]
-    [InlineData(4, 3, "attemptNumber")]
-    public void LogRetryAttempt_Should_Throw_When_Attempts_Are_Invalid(int attemptNumber, int maxAttempts, string parameterName)
+    [InlineData(0, 3)]
+    [InlineData(1, 0)]
+    [InlineData(4, 3)]
+    [InlineData(-1, -1)]
+    public void LogRetryAttempt_Should_Not_Throw_For_Out_Of_Range_Attempts(int attemptNumber, int maxAttempts)
     {
         var logger = new TestLogger();
 
         Action action = () => logger.LogRetryAttempt("ImportCustomers", attemptNumber, maxAttempts);
 
-        _ = action.Should().Throw<ArgumentOutOfRangeException>().Where(exception => exception.ParamName == parameterName);
-    }
-
-    [Fact]
-    public void LogDependencyFailure_Should_Throw_When_Exception_Is_Null()
-    {
-        var logger = new TestLogger();
-
-        Action action = () => logger.LogDependencyFailure(null!, "PaymentsApi");
-
-        _ = action.Should().Throw<ArgumentNullException>().Where(exception => exception.ParamName == "exception");
-    }
-
-    [Fact]
-    public void LogDependencyFailure_Should_Throw_When_DependencyName_Is_Invalid()
-    {
-        var logger = new TestLogger();
-
-        Action action = () => logger.LogDependencyFailure(new InvalidOperationException(), " ");
-
-        _ = action.Should().Throw<ArgumentException>().Where(exception => exception.ParamName == "dependencyName");
-    }
-
-    [Fact]
-    public void LogResourceNotFound_Should_Throw_When_ResourceType_Is_Invalid()
-    {
-        var logger = new TestLogger();
-
-        Action action = () => logger.LogResourceNotFound(" ");
-
-        _ = action.Should().Throw<ArgumentException>().Where(exception => exception.ParamName == "resourceType");
+        _ = action.Should().NotThrow();
+        _ = logger.Entries.Should().ContainSingle();
     }
 }

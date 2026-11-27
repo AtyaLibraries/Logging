@@ -73,7 +73,7 @@ Blank property names are ignored when a `LogScopeState` is created from key/valu
 
 ## Exceptions
 
-Argument validation is implemented with `Atya.Foundation.Guards`. Most extension methods throw `ArgumentNullException` for a null `ILogger`, required exception argument, or required string argument. Methods that require names or identifiers throw `ArgumentException` when those values are empty or whitespace. `LogRetryAttempt` throws `ArgumentOutOfRangeException` when attempt numbers are less than one or the current attempt is greater than the maximum attempt count.
+The `ILogger` extension methods never throw. A null logger or a disabled log level is a no-op, and a missing or blank name, reason or exception is replaced by a placeholder (`UnknownOperation`, `UnknownDependency`, `UnknownResource`, `Unspecified`) so that logging inside a `catch` block can never replace the exception being handled. `LogRetryAttempt` logs the supplied attempt numbers as given.
 
 ## Versioning
 
